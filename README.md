@@ -189,3 +189,86 @@ This website is created for AFMIZ Mercy City Assembly. All rights reserved.
 Built with love for the AFMIZ Mercy City Assembly community. May this website serve to strengthen our church family and spread God's message of hope and mercy.
 
 **"For where two or three gather in my name, there am I with them." - Matthew 18:20**
+
+---
+
+## New Full-Stack Church Management System
+
+This workspace now includes a new full-stack structure under `client` and `server`:
+
+- `client/public-site`: Next.js public website with Tailwind CSS and SEO-ready pages.
+- `client/admin-dashboard`: Next.js admin dashboard with secure role-based UI.
+- `server`: Express backend with JWT authentication, Mongoose models, protected admin routes, and CMS content APIs.
+
+### Setup
+
+1. Copy `.env.example` to `server/.env` and set `MONGODB_URI`, `JWT_SECRET`, and `CLIENT_URL`.
+2. Run `npm install` in `server`, `client/public-site`, and `client/admin-dashboard`.
+3. Start the backend with `npm run dev` in `server`.
+4. Start the public site with `npm run dev` in `client/public-site`.
+5. Start the admin dashboard with `npm run dev` in `client/admin-dashboard`.
+
+### Notes
+
+- Admin routes are protected by `server/middleware/authMiddleware.js`.
+- Public pages fetch dynamic content from `/api/public/home`.
+- The admin dashboard is designed as a separate app and is not accessible through the public site.
+- The backend includes models for `User`, `Member`, `Event`, `Sermon`, `Donation`, `PrayerRequest`, `Ministry`, `BlogPost`, `GalleryImage`, and `Notification`.
+- Authentication is handled via JWT tokens stored in localStorage for the admin dashboard.
+- Public forms (donations, prayer requests, contact) submit data to backend APIs with success/error feedback.
+- **NEW**: Email notifications are sent for prayer requests, donations, sermon uploads, and blog posts.
+- **NEW**: Admin dashboard includes interactive charts (donations, attendance, ministry distribution).
+- **NEW**: Public site features dark mode toggle with persistent theme preference.
+
+### Admin Login
+
+- **Email:** admin@mercycity.org
+- **Password:** admin123
+- **URL:** http://localhost:3001 (admin dashboard)
+
+### API Endpoints
+
+**Public:**
+- `GET /api/public/home` - Get homepage content (events, sermons, ministries, gallery, blog posts)
+- `POST /api/public/prayer-requests` - Submit prayer request
+- `POST /api/public/contact` - Submit contact form
+
+**Auth:**
+- `POST /api/auth/login` - Admin login
+- `POST /api/auth/register` - Register admin user
+- `GET /api/auth/profile` - Get current user profile
+
+**Admin (Protected):**
+- `GET /api/admin/overview` - Dashboard statistics
+- `POST /api/admin/events` - Create event
+- `PUT /api/admin/events/:id` - Update event
+- `POST /api/admin/sermons` - Upload sermon
+- `POST /api/admin/donations` - Record donation
+- `PUT /api/admin/prayers/:id` - Update prayer request status
+- `POST /api/admin/blog` - Create blog post
+- `POST /api/admin/gallery` - Upload gallery image
+- `PUT /api/admin/users/:id/role` - Change user role
+
+### Features
+
+#### Public Website
+- Responsive design with mobile-first approach
+- Dark mode toggle (persistent across sessions)
+- Dynamic content from admin dashboard
+- Interactive forms with email notifications
+- SEO-optimized pages
+
+#### Admin Dashboard
+- Secure authentication with JWT
+- Role-based access control
+- Interactive charts and analytics
+- Real-time dashboard statistics
+- Activity logging for all admin actions
+- Email notifications for key events
+
+#### Backend
+- RESTful API with proper error handling
+- Email notifications for user interactions
+- Activity logging for admin actions
+- CSRF protection and input validation
+- Sample data seeding on first run
