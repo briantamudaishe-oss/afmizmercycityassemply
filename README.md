@@ -1,53 +1,367 @@
 # AFMIZ Mercy City Assembly Website
 
-A comprehensive church management website featuring modern design, secure admin dashboard, and integrated social media functionality.
+A comprehensive, production-ready church management system with secure authentication, SMS verification, admin approval system, and integrated Twilio services.
 
 ## 🌟 Features
 
-### 🏠 Homepage
+### 🏠 Public Website
 - **Church Introduction**: Spirit-filled community focused on Word, Worship, and Prayer
 - **Service Times**: Sunday services, prayer meetings, youth programs
 - **Announcements**: Latest church news and events
-- **Social Media Links**: Facebook, Instagram, TikTok, WhatsApp, YouTube
-- **Call-to-Action Buttons**: "Give Now" and "Make a Pledge"
+- **Social Media**: Facebook, Instagram, TikTok, WhatsApp, YouTube links
+- **Giving Portal**: Online donations and pledges
+- **Dark Mode Support**: Modern theme switching
 
-### 📜 Pledges System
-- **Popup Modal Form** with fields for:
-  - Full Name, Email, Phone Number
-  - Pledge Type (Building, Missions, Facility, General)
-  - Amount (ZWL)
-- **Auto-notifications**: Email confirmation and WhatsApp alerts
+### 🔐 Secure Authentication
 
-### 💰 Tithes & Offerings System
-- **Secure Online Giving** with popup form
-- **Payment Integration** (Bank Transfer, Mobile Banking, Cash)
-- **Auto Receipt Generation** via Email
-- **Optional WhatsApp Confirmations**
+#### User Registration & Verification
+- **3-Step Registration Flow**:
+  1. User fills registration form (name, email, phone, password)
+  2. **Twilio SMS OTP** verification (6-digit code)
+  3. Admin approval before account activation
+- **Phone Verification**: International format support (+263...)
+- **OTP Features**:
+  - 60-second resend cooldown
+  - Max 3 verification attempts
+  - Rate limiting
+  - Code expiration
 
-### 🔐 Admin Dashboard
-- **Restricted Access**: Pastor-approved login with 2FA
-- **Role-Based Security**: Admin, Member, Visitor permissions
-- **Dashboard Features**:
-  - View pledges and offerings
-  - Track financial data with charts
-  - Manage users and roles
-  - Send notifications (Email & WhatsApp)
-  - Generate reports (Financial, Membership, Attendance)
+#### Account Approval System
+- **Admin Dashboard**: View pending user approvals
+- **One-Click Approval**: Activate verified users
+- **Rejection System**: Decline with custom reason
+- **Email Notifications**: Users notified of approval status
+
+#### Login Security
+- **JWT Authentication**: Secure token-based login
+- **Password Hashing**: Bcrypt encryption
+- **Token Expiration**: 7-day default expiration
+- **Protected Routes**: Role-based access control
+
+### 🛡️ Security Features
+
+**Authentication & Authorization**:
+- Bcrypt password hashing (10-round salt)
+- JWT token-based authentication
+- Role-based access control (user/admin)
+- Protected admin routes
+- Automatic token verification
+
+**Admin Security**:
+- Admin dashboard completely hidden from public
+- No admin buttons/links in public navbar
+- Protected routes with role checking
+- Admin-only endpoints
+- Secure admin login required
+
+**Data Security**:
+- Password never stored plain text
+- Sensitive data excluded from responses
+- Environment variables for secrets
+- No credentials in GitHub (.env excluded)
+- Rate limiting on OTP requests
+
+### 🎛️ Admin Dashboard
+
+**User Management**:
+- Pending approvals list
+- One-click approval/rejection
+- User status tracking
+- Search and filter users
+- Activity logs
+
+**SMS Messaging** (Twilio Integration):
+- Send SMS to individual users
+- Bulk messaging to members
+- Event reminders
+- Prayer request notifications
+- Message templates
+
+**Content Management**:
+- Announcement creation & editing
+- Event management
+- Sermon uploads
+- Gallery management
+- Blog posts
+
+**Analytics & Reports**:
+- Dashboard overview
+- Financial reports
+- Membership statistics
+- Export functionality
+- Chart visualizations
+
+### 📱 Responsive Design
+- **Mobile Optimized**: Full mobile navbar with hamburger menu
+- **Tablet Support**: Adaptive layouts
+- **Desktop**: Full feature access
+- **Dark Mode**: Night-friendly interface
+
+### 🌐 Internationalization
+- **Multi-Language**: English & Spanish support
+- **Language Selector**: Easy switching in navbar
+- **Localized Content**: All pages translated
+- **Admin Locale**: Dashboard localization
 
 ### 🔔 Notification System
-- **Multi-Channel**: Email and WhatsApp
-- **Automated Triggers**: New pledges, payment confirmations, announcements
-- **Bulk Messaging**: Send to all members or specific groups
+- **Twilio SMS**: SMS notifications via OTP service
+- **Email Verification**: Email notifications (configurable)
+- **Bulk Messaging**: Send to multiple recipients
+- **Event Alerts**: Automatic event reminders
+- **Prayer Requests**: Notify members of prayer needs
 
-### 📱 Social Media Integration
-- **Embedded Feeds**: Facebook posts, Instagram grid, TikTok videos
-- **Direct Links**: All platforms linked to @AFMIZMercyCityAssembly
-- **Live Updates**: Mock social media content display
+## 🚀 Tech Stack
 
-## 🛡️ Security Features
+### Frontend
+- **Next.js 14** - React framework
+- **Tailwind CSS** - Styling
+- **Framer Motion** - Animations (optional)
+- **Axios** - API requests
+- **LocalStorage** - Token persistence
 
-### Authentication
-- **Encrypted Passwords**: Secure storage (mock implementation)
+### Backend
+- **Node.js & Express** - Server
+- **MongoDB & Mongoose** - Database
+- **JWT** - Authentication
+- **Bcryptjs** - Password hashing
+- **Twilio SDK** - SMS & Verify services
+- **CORS & CSRF** - Security
+
+### Infrastructure
+- **MongoDB Atlas** - Cloud database (optional)
+- **Twilio** - SMS & OTP verification
+- **Vercel/Heroku** - Hosting (optional)
+
+## 📦 Project Structure
+
+```
+project-root/
+├── client/
+│   ├── public-site/          # Public website (Next.js)
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── context/          # Theme, Locale contexts
+│   │   └── styles/
+│   │
+│   └── admin-dashboard/      # Admin dashboard (Next.js)
+│       ├── pages/
+│       ├── components/
+│       ├── context/          # Auth, Locale contexts
+│       └── middleware/
+│
+├── server/                    # Express backend
+│   ├── models/               # MongoDB schemas
+│   ├── controllers/          # Route handlers
+│   ├── routes/               # API endpoints
+│   ├── middleware/           # Auth, validation
+│   ├── utils/                # Helpers (Twilio, etc.)
+│   ├── config/               # Database setup
+│   └── app.js                # Express app
+│
+├── .env                      # Environment variables (SECRET)
+├── .env.example              # Template
+├── .gitignore                # Git ignore rules
+├── README.md                 # This file
+├── SECURITY_AUTHENTICATION.md # Security docs
+├── SETUP_DEPLOYMENT_GUIDE.md # Deployment guide
+└── TWILIO_SMS_INTEGRATION.md # SMS docs
+```
+
+## 🔧 Setup & Installation
+
+### Prerequisites
+- Node.js 16+
+- MongoDB (local or Atlas)
+- Twilio Account
+- Git
+
+### Quick Start
+
+```bash
+# 1. Clone and setup environment
+cp .env.example .env
+# Edit .env with your credentials
+
+# 2. Backend
+cd server
+npm install
+npm run dev
+
+# 3. Public Site (new terminal)
+cd client/public-site
+npm install
+npm run dev
+
+# 4. Admin Dashboard (new terminal)
+cd client/admin-dashboard
+npm install
+npm run dev
+```
+
+**URLs**:
+- Public Site: http://localhost:3000
+- Admin Dashboard: http://localhost:3001
+- API: http://localhost:5000
+
+### Configure Twilio
+
+1. Create account at [Twilio.com](https://www.twilio.com)
+2. Get credentials:
+   - Account SID
+   - Auth Token
+   - SMS Number
+3. Create **Verify Service** for OTP
+4. Add to `.env`:
+   ```
+   TWILIO_ACCOUNT_SID=AC...
+   TWILIO_AUTH_TOKEN=...
+   TWILIO_VERIFY_SID=VA...
+   TWILIO_PHONE_NUMBER=+...
+   ```
+
+## 📖 User Registration Flow
+
+### 1. Register
+**URL**: http://localhost:3000/register
+- Fill form (name, email, phone, password)
+- Submit → OTP sent via SMS
+
+### 2. Verify OTP
+- Enter 6-digit code
+- Click "Verify Code"
+- Wait for admin approval
+
+### 3. Admin Approval
+**URL**: http://localhost:3001/admin/approvals
+- Admin reviews pending users
+- Click "Approve" or "Reject"
+
+### 4. Login
+**URL**: http://localhost:3000/login
+- Email & password
+- Access user account
+
+### 5. Admin Access
+**URL**: http://localhost:3001
+- Admin login (role=admin)
+- Full dashboard access
+
+## 🔒 Security Checklist
+
+- ✅ SMS OTP verification
+- ✅ Admin approval system
+- ✅ Password hashing (bcrypt)
+- ✅ JWT authentication
+- ✅ Protected routes
+- ✅ Role-based access
+- ✅ Admin hidden from public
+- ✅ No secrets in GitHub (.env)
+- ✅ Rate limiting on OTP
+- ✅ CORS configured
+- ✅ CSRF protection
+- ✅ Secure password requirements
+
+## 📚 Documentation
+
+- [Security & Authentication](./SECURITY_AUTHENTICATION.md) - Complete auth flow
+- [Setup & Deployment](./SETUP_DEPLOYMENT_GUIDE.md) - Production deployment
+- [Twilio Integration](./TWILIO_SMS_INTEGRATION.md) - SMS details
+
+## 🚀 Deployment
+
+### Vercel (Frontend)
+```bash
+vercel --prod
+```
+
+### Heroku (Backend)
+```bash
+heroku create your-app
+heroku config:set JWT_SECRET=your_secret
+git push heroku main
+```
+
+### Production Checklist
+- [ ] Change JWT_SECRET
+- [ ] Use production MongoDB
+- [ ] Configure Twilio production
+- [ ] Enable HTTPS
+- [ ] Set CORS domain
+- [ ] Configure email service
+- [ ] Set NODE_ENV=production
+- [ ] Test OTP flow
+- [ ] Test admin approval
+- [ ] Monitor logs
+
+## 🐛 Troubleshooting
+
+### OTP Not Arriving
+- Check phone number format (+263...)
+- Verify Twilio Verify Service active
+- Check Twilio credits
+- Try resend (60 sec cooldown)
+
+### Admin Dashboard Won't Load
+- Check JWT token valid
+- Verify user role is "admin"
+- Check browser console errors
+- Clear localStorage
+
+### Login Failed
+- Verify account is approved
+- Check email/password correct
+- Try resetting password
+- Check user status
+
+### Database Connection Error
+- MongoDB running?
+- Check MONGODB_URI
+- Verify credentials
+- Check network access (if Atlas)
+
+## 📊 API Endpoints
+
+### Public Auth
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/api/auth/register` | User registration |
+| POST | `/api/auth/verify-otp` | Verify OTP code |
+| POST | `/api/auth/resend-otp` | Resend OTP |
+| POST | `/api/auth/login` | User login |
+| GET | `/api/auth/profile` | Get profile (protected) |
+
+### Admin Only
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/admin/pending-approvals` | Pending users |
+| POST | `/api/admin/approve-user/:id` | Approve user |
+| POST | `/api/admin/reject-user/:id` | Reject user |
+| POST | `/api/admin/send-sms` | Send SMS |
+| GET | `/api/admin/users` | List all users |
+
+## 🤝 Contributing
+
+1. Create feature branch
+2. Make changes
+3. Test thoroughly
+4. Submit pull request
+5. Follow security guidelines
+
+## 📝 License
+
+Proprietary - AFMIZ Mercy City Assembly
+
+## 📞 Support
+
+- Email: support@mercycity.church
+- WhatsApp: [Link]
+- Phone: [Link]
+
+---
+
+**Last Updated**: May 2026
+**Version**: 2.0.0 (Security Release)
+
 - **Two-Factor Authentication**: SMS verification codes
 - **Session Management**: 30-minute auto-logout
 - **Role-Based Access Control**: Different permissions per user type
