@@ -5,11 +5,11 @@ const ADMIN_DATA_KEY = 'mercyCityAdminData';
 // Mock data for demonstration
 const mockData = {
     pledges: [
-        { id: 1, name: 'Mary Johnson', email: 'mary@example.com', phone: '+263 77 123 4567', type: 'Building Fund', amount: 50000, date: '2024-01-15', status: 'active' },
-        { id: 2, name: 'David Smith', email: 'david@example.com', phone: '+263 71 987 6543', type: 'Missions', amount: 25000, date: '2024-01-14', status: 'active' },
-        { id: 3, name: 'Sarah Wilson', email: 'sarah@example.com', phone: '+263 73 456 7890', type: 'Facility Upgrade', amount: 75000, date: '2024-01-13', status: 'pending' },
-        { id: 4, name: 'John Brown', email: 'john@example.com', phone: '+263 77 321 0987', type: 'General Fund', amount: 15000, date: '2024-01-12', status: 'completed' },
-        { id: 5, name: 'Grace Lee', email: 'grace@example.com', phone: '+263 71 654 3210', type: 'Building Fund', amount: 100000, date: '2024-01-11', status: 'active' }
+        { id: 1, name: 'Mary Johnson', email: 'mary@example.com', phone: '+263 77 123 4567', type: 'Building Fund', amount: 50000, date: '2024-01-15', dueDate: '2024-01-20', status: 'active' },
+        { id: 2, name: 'David Smith', email: 'david@example.com', phone: '+263 71 987 6543', type: 'Missions', amount: 25000, date: '2024-01-14', dueDate: '2024-01-19', status: 'active' },
+        { id: 3, name: 'Sarah Wilson', email: 'sarah@example.com', phone: '+263 73 456 7890', type: 'Facility Upgrade', amount: 75000, date: '2024-01-13', dueDate: '2024-01-18', status: 'pending' },
+        { id: 4, name: 'John Brown', email: 'john@example.com', phone: '+263 77 321 0987', type: 'General Fund', amount: 15000, date: '2024-01-12', dueDate: '2024-01-17', status: 'completed' },
+        { id: 5, name: 'Grace Lee', email: 'grace@example.com', phone: '+263 71 654 3210', type: 'Building Fund', amount: 100000, date: '2024-01-11', dueDate: '2024-01-16', status: 'active' }
     ],
     offerings: [
         { id: 1, name: 'Mary Johnson', email: 'mary@example.com', phone: '+263 77 123 4567', amount: 25000, method: 'Bank Transfer', date: '2024-01-15', receipt: true },
@@ -249,6 +249,8 @@ function initializeDashboard() {
     if (rolePermissions[currentUser.role].canViewOfferings) loadOfferingsTable();
     if (rolePermissions[currentUser.role].canViewTithes) loadTithesTable();
     if (rolePermissions[currentUser.role].canViewUsers) loadUsersTable();
+    loadDonationsTable();
+    loadVisitsTable();
     if (rolePermissions[currentUser.role].canEditAnnouncements || rolePermissions[currentUser.role].canPublishSermons || currentUser.role === 'admin') loadNotifications();
     updateStats();
     loadCharts();
@@ -438,6 +440,10 @@ function setupEventListeners() {
         { id: 'offering-search', handler: loadOfferingsTable },
         { id: 'tithes-filter', handler: loadTithesTable },
         { id: 'tithes-search', handler: loadTithesTable },
+        { id: 'donations-filter', handler: loadDonationsTable },
+        { id: 'donations-search', handler: loadDonationsTable },
+        { id: 'visits-filter', handler: loadVisitsTable },
+        { id: 'visits-search', handler: loadVisitsTable },
         { id: 'user-role-filter', handler: loadUsersTable },
         { id: 'user-search', handler: loadUsersTable }
     ];
@@ -452,6 +458,11 @@ function setupEventListeners() {
             }
         }
     });
+
+    const addPledgeForm = document.getElementById('addPledgeForm');
+    if (addPledgeForm) {
+        addPledgeForm.addEventListener('submit', handleAddPledge);
+    }
 }
 
 function updateStats() {
@@ -557,6 +568,9 @@ function loadPledgesTable() {
 
     if (filter !== 'all') {
         const filterMap = {
+            'rufaro': 'Rufaro',
+            'church-building': 'Church Building',
+            'revivals': 'Revivals',
             'building': 'Building Fund',
             'missions': 'Missions',
             'facility': 'Facility Upgrade',
@@ -568,7 +582,9 @@ function loadPledgesTable() {
     if (search) {
         filteredPledges = filteredPledges.filter(pledge =>
             pledge.name.toLowerCase().includes(search) ||
-            pledge.email.toLowerCase().includes(search)
+            pledge.email.toLowerCase().includes(search) ||
+            pledge.phone.toLowerCase().includes(search) ||
+            pledge.type.toLowerCase().includes(search)
         );
     }
 
@@ -597,6 +613,7 @@ function loadPledgesTable() {
                 <small>${formatCurrency(usdAmount, 'USD')} / ${formatCurrency(zwgAmount, 'ZWG')} / ${formatCurrency(zarAmount, 'ZAR')}</small>
             </td>
             <td>${formatDate(pledge.date)}</td>
+            <td>${pledge.dueDate ? formatDate(pledge.dueDate) : '-'}</td>
             <td>
                 <button class="pledged-btn ${isFulfilled ? 'fulfilled' : ''}" onclick="togglePledgeFulfilled(${pledge.id})">
                     ${isFulfilled ? '✓ Pledged' : 'Mark Pledged'}
@@ -621,6 +638,78 @@ function togglePledgeFulfilled(id) {
         const message = pledge.status === 'completed' ? 'Pledge marked as fulfilled!' : 'Pledge status updated.';
         showAdminSuccessMessage('Status Updated', message);
     }
+}
+
+function handleAddPledge(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('pledgeName').value.trim();
+    const email = document.getElementById('pledgeEmail').value.trim();
+    const countryCode = document.getElementById('pledgeCountryCode').value;
+    const phoneInput = document.getElementById('pledgePhone').value.trim();
+    const type = document.getElementById('pledgeType').value;
+    const amount = parseFloat(document.getElementById('pledgeAmount').value);
+
+    const fullPhone = normalizePhone(countryCode, phoneInput);
+
+    if (!name || !email || !phoneInput || !type || isNaN(amount) || amount <= 0) {
+        showAdminSuccessMessage('Error', 'Please complete all required pledge fields with valid values.');
+        return;
+    }
+
+    if (!isValidEmail(email)) {
+        showAdminSuccessMessage('Error', 'Please enter a valid email address.');
+        return;
+    }
+
+    if (!isValidWhatsAppNumber(fullPhone)) {
+        showAdminSuccessMessage('Error', 'Please enter a valid WhatsApp phone number including country code.');
+        return;
+    }
+
+    const creationDate = new Date();
+    const dueDate = addDays(creationDate, 5);
+    const newPledge = {
+        id: mockData.pledges.length ? Math.max(...mockData.pledges.map(p => p.id)) + 1 : 1,
+        name,
+        email,
+        phone: formatPhoneForDisplay(fullPhone),
+        type,
+        amount,
+        date: creationDate.toISOString().split('T')[0],
+        dueDate: dueDate.toISOString().split('T')[0],
+        status: 'pending'
+    };
+
+    mockData.pledges.unshift(newPledge);
+    saveAdminData();
+    loadPledgesTable();
+    updateStats();
+    event.target.reset();
+    showAdminSuccessMessage('Pledge Recorded', `A ${type} pledge for ${name} has been recorded with due date ${formatDate(newPledge.dueDate)}.`);
+}
+
+function normalizePhone(countryCode, phone) {
+    const digits = phone.replace(/\D/g, '').replace(/^0+/, '');
+    return countryCode + digits;
+}
+
+function formatPhoneForDisplay(phone) {
+    return phone.replace(/[^\d+]/g, '');
+}
+
+function isValidWhatsAppNumber(phone) {
+    return /^\+\d{7,15}$/.test(phone);
+}
+
+function addDays(date, days) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+}
+
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function loadTithesTable() {
@@ -1062,7 +1151,7 @@ function sendNotification(event) {
 function viewPledge(id) {
     const pledge = mockData.pledges.find(p => p.id === id);
     if (pledge) {
-        alert(`Pledge Details:\n\nName: ${pledge.name}\nEmail: ${pledge.email}\nType: ${pledge.type}\nAmount: ZWL ${pledge.amount.toLocaleString()}\nDate: ${formatDate(pledge.date)}\nStatus: ${pledge.status}`);
+        alert(`Pledge Details:\n\nName: ${pledge.name}\nEmail: ${pledge.email}\nPhone: ${pledge.phone}\nType: ${pledge.type}\nAmount: ZWL ${pledge.amount.toLocaleString()}\nDate: ${formatDate(pledge.date)}\nDue Date: ${pledge.dueDate ? formatDate(pledge.dueDate) : 'N/A'}\nStatus: ${pledge.status}`);
     }
 }
 
@@ -1455,6 +1544,138 @@ function handlePledgesRegistration(event) {
     alert('Registration successful. You can now login to access pledges.');
     showPledgesLoginForm();
 }
+
+// ===== DONATIONS MANAGEMENT =====
+function loadDonationsTable() {
+    const filter = document.getElementById('donations-filter').value;
+    const search = document.getElementById('donations-search').value.toLowerCase();
+
+    // Load donations from localStorage
+    const donationsKey = 'churchDonations';
+    const storedDonations = localStorage.getItem(donationsKey);
+    const donations = storedDonations ? JSON.parse(storedDonations) : [];
+
+    let filteredDonations = donations;
+
+    if (filter !== 'all') {
+        filteredDonations = filteredDonations.filter(donation => donation.donationType === filter);
+    }
+
+    if (search) {
+        filteredDonations = filteredDonations.filter(donation =>
+            donation.fullName.toLowerCase().includes(search) ||
+            donation.email.toLowerCase().includes(search)
+        );
+    }
+
+    const tbody = document.querySelector('#donations-table tbody');
+    tbody.innerHTML = '';
+
+    filteredDonations.forEach(donation => {
+        const row = document.createElement('tr');
+        const date = new Date(donation.submittedAt);
+        const interests = donation.message ? donation.message.substring(0, 30) + '...' : '-';
+        
+        row.innerHTML = `
+            <td>${donation.fullName}</td>
+            <td>${donation.email}</td>
+            <td>${donation.phone}</td>
+            <td><span class="badge">${donation.donationType}</span></td>
+            <td>${formatCurrency(donation.amount, 'ZWL')}</td>
+            <td>${donation.paymentMethod}</td>
+            <td>${formatDate(donation.submittedAt)}</td>
+            <td><small>${interests}</small></td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    if (donations.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No donations found</td></tr>';
+    }
+}
+
+// Add event listeners for donations filters
+document.addEventListener('DOMContentLoaded', function() {
+    const donationsFilter = document.getElementById('donations-filter');
+    const donationsSearch = document.getElementById('donations-search');
+    
+    if (donationsFilter) {
+        donationsFilter.addEventListener('change', loadDonationsTable);
+    }
+    if (donationsSearch) {
+        donationsSearch.addEventListener('keyup', loadDonationsTable);
+    }
+
+    const visitsFilter = document.getElementById('visits-filter');
+    const visitsSearch = document.getElementById('visits-search');
+    
+    if (visitsFilter) {
+        visitsFilter.addEventListener('change', loadVisitsTable);
+    }
+    if (visitsSearch) {
+        visitsSearch.addEventListener('keyup', loadVisitsTable);
+    }
+});
+
+// ===== VISITS MANAGEMENT =====
+function loadVisitsTable() {
+    const filter = document.getElementById('visits-filter').value;
+    const search = document.getElementById('visits-search').value.toLowerCase();
+
+    // Load visits from localStorage
+    const visitsKey = 'churchVisits';
+    const storedVisits = localStorage.getItem(visitsKey);
+    const visits = storedVisits ? JSON.parse(storedVisits) : [];
+
+    let filteredVisits = visits;
+
+    if (filter !== 'all') {
+        filteredVisits = filteredVisits.filter(visit => visit.service === filter);
+    }
+
+    if (search) {
+        filteredVisits = filteredVisits.filter(visit =>
+            visit.fullName.toLowerCase().includes(search) ||
+            visit.email.toLowerCase().includes(search)
+        );
+    }
+
+    const tbody = document.querySelector('#visits-table tbody');
+    tbody.innerHTML = '';
+
+    filteredVisits.forEach(visit => {
+        const row = document.createElement('tr');
+        const interests = visit.interests.length > 0 ? visit.interests.join(', ') : '-';
+        
+        row.innerHTML = `
+            <td>${visit.fullName}</td>
+            <td>${visit.email}</td>
+            <td>${visit.phone}</td>
+            <td>${visit.service}</td>
+            <td>${visit.groupSize}</td>
+            <td><span class="badge ${visit.firstTime === 'Yes' ? 'new' : ''}">${visit.firstTime}</span></td>
+            <td><small>${interests}</small></td>
+            <td>${formatDate(visit.submittedAt)}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    if (visits.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No visit registrations found</td></tr>';
+    }
+}
+
+// Load donations and visits when their pages are opened
+const originalNavigateToModule = navigateToModule;
+navigateToModule = function(module) {
+    originalNavigateToModule(module);
+    
+    if (module === 'donations') {
+        setTimeout(loadDonationsTable, 100);
+    } else if (module === 'visits') {
+        setTimeout(loadVisitsTable, 100);
+    }
+};
 
 // Check pledges access on pledges page load
 function checkPledgesAccess() {
